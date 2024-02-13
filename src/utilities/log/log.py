@@ -8,19 +8,31 @@ from ..level import Level
 
 
 class Log:
-    """
-    A logging utility class for creating log messages
-    with various severity levels.
 
-    This class provides functionality to log messages with timestamps,
-    file origins, and specified severity levels.
+    """
+    A logging utility class implementing the singleton pattern to ensure only a
+    single instance exists throughout the application. This class is designed
+    for creating log messages with various severity levels, including:
+        - timestamps
+        - file origins
+        - specified severity levels.
+
     It supports dynamic log level setting to control the verbosity of output.
+
+    The singleton pattern is implemented using the __new__ method to control
+    the object creation process. This ensures that multiple attempts to
+    instantiate the Log class will always return the same instance.
 
     Attributes:
         log_level (Level): The current logging level; messages with a level
                            lower than this will not be logged.
 
-  Methods:
+    Methods:
+        __new__(cls, *args, **kwargs):
+            Controls the instantiation of the Log class, ensuring only one
+            instance is created. Subsequent calls to create a new Log instance
+            will return the existing instance.
+
         __init__(self, log_level=Level.ERROR):
             Initializes the Log instance with a specified logging level.
             - log_level (Level, optional): The initial logging level.
@@ -54,15 +66,36 @@ class Log:
         log.log("This is a debug message.", Level.DEBUG)
     """
 
-    def __init__(self, log_level=Level.ERROR) -> None:
-        """
-        Initializes the Log instance with a specified logging level.
+    _instance = None
 
-        Args:
-            log_level (Level, optional): The initial logging level. Defaults to Level.ERROR.
+    def __new__(cls, *args, **kwargs):
+        """
+            Controls the instantiation of the Log class, ensuring only
+            one instance is created. Subsequent calls to create
+            a new Log instance will return the existing instance.
         """
 
-        self.log_level = log_level
+        if cls._instance is None:
+            cls._instance = super(Log, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self, log_level=Level.ERROR):
+        """
+            Initializes the Log instance with a specified logging
+            level.
+
+            This method sets the log_level attribute and is designed to prevent
+            reinitialization of the instance attributes
+            if the singleton instance already exists.
+
+            - log_level (Level, optional): The initial logging level,
+            defaulting to Level.ERROR.
+        """
+
+        # Initialize the log level only once
+        if not hasattr(self, 'initialized'):  # Prevent reinitialization
+            self.log_level = log_level
+            self.initialized = True
 
     def log(self, buff, level=Level.ERROR) -> None:
         """
